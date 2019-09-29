@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @Controller
@@ -37,12 +39,43 @@ public class UserController {
         return "users/registration";
     }
 
+    /* For regex testing
+    public static void main(String[] args) {
+
+        Pattern p = Pattern.compile( "[0-9]" );
+        Matcher m = p.matcher("phani27");
+        System.out.println(m.find());
+
+        Pattern pLetter = Pattern.compile( "[a-zA-Z]" );
+        Matcher mLetter = pLetter.matcher("phani27");
+        System.out.println(mLetter.find());
+
+        Pattern pSpl = Pattern.compile( "[^A-Za-z0-9]" );
+        Matcher mSpl = pSpl.matcher("phani27@");
+        System.out.println(mSpl.find());
+
+
+    }
+    */
+
     //This controller method is called when the request pattern is of type 'users/registration' and also the incoming request is of POST type
     //This method calls the business logic and after the user record is persisted in the database, directs to login page
     @RequestMapping(value = "users/registration", method = RequestMethod.POST)
-    public String registerUser(User user) {
-        userService.registerUser(user);
-        return "redirect:/users/login";
+    public String registerUser(User user,Model model) {
+        String errorText = "Password must contain atleast 1 alphabet, 1 number & 1 special character";
+        String pwd = user.getPassword();
+        if ((pwd != null) && (!pwd.equals("")) &&
+                Pattern.compile("[^A-Za-z0-9]").matcher(pwd).find() && Pattern.compile("[a-zA-Z]").matcher(pwd).find()
+                && Pattern.compile("[0-9]").matcher(pwd).find()) {
+            userService.registerUser(user);
+            return "redirect:/users/login";
+        }
+        UserProfile profile = new UserProfile();
+        user.setProfile(profile);
+        model.addAttribute("User", user);
+        model.addAttribute("passwordTypeError",errorText);
+
+        return "users/registration";
     }
 
     //This controller method is called when the request pattern is of type 'users/login'
