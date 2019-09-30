@@ -60,6 +60,7 @@ public class ImageController {
         Image image = imageService.getImageByIdAndTitle(imageId, title);
         model.addAttribute("image", image);
         model.addAttribute("tags", image.getTags());
+        model.addAttribute("comments", image.getComments());
         return "images/image";
     }
 
@@ -102,12 +103,19 @@ public class ImageController {
     //The method first needs to convert the list of all the tags to a string containing all the tags separated by a comma and then add this string in a Model type object
     //This string is then displayed by 'edit.html' file as previous tags of an image
     @RequestMapping(value = "/editImage")
-    public String editImage(@RequestParam("imageId") Integer imageId, Model model) {
-        Image image = imageService.getImage(imageId);
+    public String editImage(@RequestParam("imageId") Integer imageId, Model model, HttpSession session) {
+        String error = "Only the owner of the image can edit the image";
 
+        Image image = imageService.getImage(imageId);
+        User loggedInUser = (User) session.getAttribute("loggeduser");
+        User imageUser = image.getUser();
         String tags = convertTagsToString(image.getTags());
         model.addAttribute("image", image);
         model.addAttribute("tags", tags);
+        if (!loggedInUser.getId().equals(imageUser.getId())) {
+            model.addAttribute("editError", error);
+            return "images/image";
+        }
         return "images/edit";
     }
 
@@ -149,12 +157,24 @@ public class ImageController {
     //This controller method is called when the request pattern is of type 'deleteImage' and also the incoming request is of DELETE type
     //The method calls the deleteImage() method in the business logic passing the id of the image to be deleted
     //Looks for a controller method with request mapping of type '/images'
+//
     @RequestMapping(value = "/deleteImage", method = RequestMethod.DELETE)
-    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId) {
+    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId,Model model,HttpSession session) {
+        String error = "Only the owner of the image can delete the image";
+        Image image = imageService.getImage(imageId);
+        User loggedInUser = (User) session.getAttribute("loggeduser");
+        User imageUser = image.getUser();
+        if (!loggedInUser.getId().equals(imageUser.getId())) {
+            String tags = convertTagsToString(image.getTags());
+            model.addAttribute("image", image);
+            model.addAttribute("tags", tags);
+            model.addAttribute("deleteError", error);
+            return "images/image";
+        }
         imageService.deleteImage(imageId);
         return "redirect:/images";
     }
-
+    //
 
     //This method converts the image to Base64 format
     private String convertUploadedFileToBase64(MultipartFile file) throws IOException {
@@ -197,4 +217,6 @@ public class ImageController {
 
         return tagString.toString();
     }
+
+
 }
