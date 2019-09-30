@@ -51,6 +51,9 @@ public class Image {
     @ManyToMany(fetch = FetchType.LAZY)
     private List<Tag> tags = new ArrayList<>();
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    private List<Comment> comments = new ArrayList<>();
+
     public Image() {
     }
 
@@ -70,6 +73,14 @@ public class Image {
     }
 
 
+    public Image(int id, String title, String imageFile, String description, Date date, List<Comment> comments) {
+        this.id = id;
+        this.title = title;
+        this.imageFile = imageFile;
+        this.description = description;
+        this.date = date;
+        this.comments = comments;
+    }
 
     public Integer getId() {
         return id;
@@ -125,5 +136,13 @@ public class Image {
 
     public void setTags(List<Tag> tags) {
         this.tags = tags;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
     }
 }
